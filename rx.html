@@ -54,8 +54,39 @@
       //Resulting stream
       const zipCodeStream = btnClickStream
                               .withLatestFrom(zipCodeInputStream, (click, zip) => zip)
-                              .distinct()
-                              .forEach(val => window.console.log('This is the val', val));
+                              .distinct();
+
+      //Get temperature
+      const getTemperature = zip =>  fetch(`http://api.openweathermap.org/data/2.5/weather?q=${zip},us&units=metric&appid=a428bc9d72a70f4ea1df9fc2746dfb9f`)
+        .then(res => {
+          window.console.log('This is the res', res);
+          return res.json();
+        });
+
+      const zipTemperatureStreamFactory = zip => Rx.Observable.fromPromise(getTemperature(zip))
+                                    .map( ({main: {temp} }) => ({temp, zip}) ); //Destructure the result
+
+      zipCodeStream
+        .flatMap(zipTemperatureStreamFactory)//works just like map, but subscribes to each observable returned and returns its value
+        .forEach( ({zip, temp}) => {
+          const locationEle = document.createElement('div');
+          const locationId = `zip-${zip}`;
+          locationEle.classList.add('location');
+
+          const zipEle = document.createElement('p');
+          zipEle.classList.add('zip');
+          zipEle.innerText = zip;
+
+          const tempEle = document.createElement('p');
+          tempEle.classList.add('temp');
+          tempEle.innerHTML = `${temp}&deg;C`;
+
+          locationEle.appendChild(zipEle);
+          locationEle.appendChild(tempEle);
+          appContainer.appendChild(locationEle);
+
+          zipcodeInput.value = '';
+        });
 
 
   </script>
