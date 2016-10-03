@@ -58,10 +58,7 @@
 
       //Get temperature
       const getTemperature = zip =>  fetch(`http://api.openweathermap.org/data/2.5/weather?q=${zip},us&units=metric&appid=a428bc9d72a70f4ea1df9fc2746dfb9f`)
-        .then(res => {
-          window.console.log('This is the res', res);
-          return res.json();
-        });
+        .then(res => res.json());
 
       const zipTemperatureStreamFactory = zip => Rx.Observable.fromPromise(getTemperature(zip))
                                     .map( ({main: {temp} }) => ({temp, zip}) ); //Destructure the result
